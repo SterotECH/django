@@ -1,5 +1,6 @@
 from django.db import models
 from django.utils.translation import gettext_lazy as _
+from django.core.validators import MinValueValidator
 
 # Many to Many RelationShip
 class Promotion(models.Model):
@@ -13,18 +14,32 @@ class Collection(models.Model):
         "Product", on_delete=models.SET_NULL, null=True, related_name="+"
     )
 
+    def __str__(self) -> str:
+        return self.title
+
+    class Meta:
+        ordering = ["title"]
+
 
 class Product(models.Model):
     title = models.CharField(max_length=255)
-    description = models.TextField()
     slug = models.SlugField()
-    unit_price = models.DecimalField(max_digits=6, decimal_places=2)
-    selling_price = models.DecimalField(max_digits=6, decimal_places=2, default=0.00)
-    inventory = models.IntegerField()
-    created_at = models.DateTimeField(auto_now_add=True)
+    description = models.TextField(null=True, blank=True)
+    unit_price = models.DecimalField(
+        max_digits=6, decimal_places=2, validators=[MinValueValidator(1)]
+    )
+    # selling_price = models.DecimalField(max_digits=6, decimal_places=2, default=0.00)
+    inventory = models.IntegerField(validators=[MinValueValidator(1)])
+    # created_at = models.DateTimeField(auto_now_add=True)
     last_update = models.DateTimeField(auto_now=True)
     collection = models.ForeignKey(Collection, on_delete=models.PROTECT)
-    promotions = models.ManyToManyField(Promotion)
+    promotions = models.ManyToManyField(Promotion, blank=True, null=True)
+
+    def __str__(self) -> str:
+        return self.title
+
+    class Meta:
+        ordering = ["title"]
 
 
 class Customer(models.Model):
@@ -36,13 +51,19 @@ class Customer(models.Model):
     first_name = models.CharField(max_length=255)
     last_name = models.CharField(max_length=255)
     email = models.EmailField(unique=True)
-    phone = models.CharField(max_length=12)
+    phone = models.CharField(max_length=255)
     date_of_birth = models.DateField(null=True)
     membership = models.CharField(
         max_length=1,
         choices=MemberChoices.choices,
         default=MemberChoices.MEMBERSHIP_EMPLOYEE,
     )
+
+    def __str__(self) -> str:
+        return f"{self.first_name} - {self.last_name}"
+
+    class Meta:
+        ordering = ["first_name", "last_name"]
 
 
 class Order(models.Model):
@@ -60,6 +81,9 @@ class Order(models.Model):
         max_length=1, choices=PAYMENT_STATUS_CHOICES, default=PAYMENT_PENDING
     )
     customer = models.ForeignKey(Customer, on_delete=models.PROTECT)
+
+    def __str__(self) -> str:
+        return f"{self.customer}  -  {self.payment_status}"
 
     # One-to-one Relationship
     # class Address (models.Model):
