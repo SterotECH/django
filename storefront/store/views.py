@@ -2,15 +2,28 @@ from django.db.models import Count
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status
 from rest_framework.filters import OrderingFilter, SearchFilter
-from rest_framework.pagination import PageNumberPagination
+from rest_framework.mixins import (
+    CreateModelMixin,
+    RetrieveModelMixin,
+    DestroyModelMixin,
+    ListModelMixin,
+)
 from rest_framework.response import Response
-from rest_framework.viewsets import ModelViewSet
+from rest_framework.viewsets import GenericViewSet, ModelViewSet
 
 from store.pagination import DefaultPagination
 
 from .filters import ProductFilter
-from .models import Collection, OrderItem, Product, Review
-from .serializer import CollectionSerializer, ProductSerializer, ReviewSerializer
+from .models import Cart, CartItem, Collection, OrderItem, Product, Review
+from .serializer import (
+    AddCartItemSerializer,
+    CartItemSerializer,
+    CartSerializer,
+    CollectionSerializer,
+    ProductSerializer,
+    ReviewSerializer,
+    UpdateCartItemSerializer,
+)
 
 
 class ProductViewSet(ModelViewSet):
@@ -58,3 +71,32 @@ class ReviewViewSet(ModelViewSet):
 
     def get_serializer_context(self):
         return {"product_id": self.kwargs["product_pk"]}
+
+
+class CartViewSet(
+    CreateModelMixin,
+    GenericViewSet,
+    RetrieveModelMixin,
+    DestroyModelMixin,
+):
+    serializer_class = CartSerializer
+    queryset = Cart.objects.prefetch_related("items__product").all()
+
+
+class CartItemViewSet(ModelViewSet):
+    http_method_names = ["get", "post", "patch", "delete"]
+
+    def get_serializer_class(self):
+        if self.request.method == "POST":
+            return AddCartItemSerializer
+        if self.request.method == "PATCH":
+            return UpdateCartItemSerializer
+        return CartItemSerializer
+
+    def get_queryset(self):
+        return CartItem.objects.filter(cart_id=self.kwargs["cart_pk"]).select_related(
+            "product"
+        )
+
+    def get_serializer_context(self):
+        return {"cart_id": self.kwargs["cart_pk"]}
