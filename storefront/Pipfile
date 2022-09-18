@@ -9,6 +9,10 @@ django-debug-toolbar = "*"
 djangorestframework = "*"
 drf-nested-routers = "*"
 django-filter = "*"
+django-mooch = "*"
+django-user-payments = "*"
+djoser = "*"
+djangorestframework-simplejwt = "*"
 
 [dev-packages]
 
