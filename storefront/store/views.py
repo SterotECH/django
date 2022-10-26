@@ -144,7 +144,7 @@ class CustomerViewSet(ModelViewSet):
         permission_classes=[IsAuthenticated],
     )
     def me(self, request):
-        (customer, created) = Customer.objects.get_or_create(
+        customer = Customer.objects.get(
             user_id=request.user.id,
         )
         if request.method == "GET":
@@ -173,7 +173,7 @@ class OrderViewSet(ModelViewSet):
     def create(self, request, *args, **kwargs):
         serializer = CreateOrderSerializer(
             data=request.data,
-            context={"user_id": self.request.user.id},
+            context={"user_id": self.request.user.id},  # type: ignore
         )
         serializer.is_valid(raise_exception=True)
         order = serializer.save()
@@ -189,9 +189,9 @@ class OrderViewSet(ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        if user.is_staff:
-            return Order.All.objects.all()
-        (customer_id, created) = Customer.objects.only("id").get_or_create(
-            user_id=user.id
+        if user.is_staff:  # type: ignore
+            return Order.objects.all()
+        customer_id = Customer.objects.only("id").get(
+            user_id=user.id,  # type: ignore
         )
         Order.objects.filter(customer_id=customer_id)

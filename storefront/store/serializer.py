@@ -13,6 +13,7 @@ from store.models import (
     Product,
     Review,
 )
+from store.signals import order_created
 
 
 class CollectionSerializer(serializers.ModelSerializer):
@@ -80,7 +81,7 @@ class CartSerializer(serializers.ModelSerializer):
 
     def get_total_price(self, cart: Cart):
         return sum(
-            [item.quantity * item.product.unit_price for item in cart.items.all()]
+            [item.quantity * item.product.unit_price for item in cart.items.all()]  # type: ignore
         )
 
     class Meta:
@@ -100,8 +101,8 @@ class AddCartItemSerializer(serializers.ModelSerializer):
 
     def save(self, **kwargs):
         cart_id = self.context["cart_id"]
-        product_id = self.validated_data["product_id"]
-        quantity = self.validated_data["quantity"]
+        product_id = self.validated_data["product_id"]  # type: ignore
+        quantity = self.validated_data["quantity"]  # type: ignore
 
         try:
             cart_item = CartItem.objects.get(
@@ -115,7 +116,7 @@ class AddCartItemSerializer(serializers.ModelSerializer):
         except CartItem.DoesNotExist:
             # Create Cart Item
             self.instance = CartItem.objects.create(
-                cart_id=cart_id, **self.validated_data
+                cart_id=cart_id, **self.validated_data  # type: ignore
             )
         return self.instance
 
@@ -179,10 +180,8 @@ class CreateOrderSerializer(serializers.Serializer):
     def save(self, **kwargs):
         with transaction.atomic():
 
-            cart_id = self.validated_data["cart_id"]
-            (customer, created) = Customer.objects.get_or_create(
-                user_id=self.context["user_id"]
-            )
+            cart_id = self.validated_data["cart_id"]  # type: ignore
+            customer = Customer.objects.get(user_id=self.context["user_id"])
             order = Order.objects.create(customer=customer)
 
             cart_item = CartItem.objects.select_related("product").filter(
@@ -201,5 +200,7 @@ class CreateOrderSerializer(serializers.Serializer):
             OrderItem.objects.bulk_create(order_item)
 
             Cart.objects.filter(pk=cart_id).delete()
+
+            order_created.send_robust(self.__class__, order=order)
 
             return order
