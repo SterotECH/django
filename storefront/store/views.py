@@ -18,8 +18,30 @@ from store.pagination import DefaultPagination
 from store.permissions import IsAdminOrReadOnly, ViewCustomerHistoryPermission
 
 from .filters import ProductFilter
-from .models import *
-from .serializer import *
+from .models import (
+    Cart,
+    CartItem,
+    Collection,
+    Customer,
+    Order,
+    OrderItem,
+    Product,
+    Review,
+)
+from .serializer import (
+    AddCartItemSerializer,
+    CartItemSerializer,
+    CartSerializer,
+    CollectionSerializer,
+    CreateOrderSerializer,
+    CustomerSerializer,
+    OrderItemSerializer,
+    OrderSerializer,
+    ProductSerializer,
+    ReviewSerializer,
+    UpdateCartItemSerializer,
+    UpdateOrderSerializer,
+)
 
 
 class ProductViewSet(ModelViewSet):
@@ -39,7 +61,8 @@ class ProductViewSet(ModelViewSet):
         if OrderItem.objects.filter(product_id=kwargs["pk"]).count() > 0:
             return Response(
                 {
-                    "error": f"Product cannot be deleted because it is associated with an order item"
+                    "error": "Product cannot be deleted because it \
+                        is associated with an order item"
                 },
                 status=status.HTTP_405_METHOD_NOT_ALLOWED,
             )
@@ -47,7 +70,9 @@ class ProductViewSet(ModelViewSet):
 
 
 class CollectionViewSet(ModelViewSet):
-    queryset = Collection.objects.annotate(products_count=Count("products")).all()
+    queryset = Collection.objects.annotate(
+        products_count=Count("products"),
+    ).all()
     serializer_class = CollectionSerializer
     permission_classes = [IsAdminOrReadOnly]
 
@@ -55,7 +80,10 @@ class CollectionViewSet(ModelViewSet):
         if Product.objects.filter(collection_id=kwargs["pk"]).count() > 0:
 
             return Response(
-                {"error": "Collection cannot be deleted as it contains products"},
+                {
+                    "error": "Collection cannot be \
+                        deleted as it contains products",
+                },
                 status=status.HTTP_405_METHOD_NOT_ALLOWED,
             )
         return super().destroy(request, *args, **kwargs)
@@ -93,9 +121,9 @@ class CartItemViewSet(ModelViewSet):
         return CartItemSerializer
 
     def get_queryset(self):
-        return CartItem.objects.filter(cart_id=self.kwargs["cart_pk"]).select_related(
-            "product"
-        )
+        return CartItem.objects.filter(
+            cart_id=self.kwargs["cart_pk"],
+        ).select_related("product")
 
     def get_serializer_context(self):
         return {"cart_id": self.kwargs["cart_pk"]}
@@ -110,9 +138,15 @@ class CustomerViewSet(ModelViewSet):
     def history(self, request, pk):
         return Response("OK")
 
-    @action(detail=False, methods=["GET", "PUT"], permission_classes=[IsAuthenticated])
+    @action(
+        detail=False,
+        methods=["GET", "PUT"],
+        permission_classes=[IsAuthenticated],
+    )
     def me(self, request):
-        (customer, created) = Customer.objects.get_or_create(user_id=request.user.id)
+        (customer, created) = Customer.objects.get_or_create(
+            user_id=request.user.id,
+        )
         if request.method == "GET":
             serializer = CustomerSerializer(customer)
             return Response(serializer.data)
@@ -121,3 +155,43 @@ class CustomerViewSet(ModelViewSet):
             serializer.is_valid(raise_exception=True)
             serializer.save()
             return Response(serializer.data)
+
+
+class OrderItemViewSet(ModelViewSet):
+    serializer_class = OrderItemSerializer
+    queryset = CartItem.objects.select_related("items__order_items").all()
+
+
+class OrderViewSet(ModelViewSet):
+    http_method_names = ["get", "patch", "delete", "post", "head", "options"]
+
+    def get_permissions(self):
+        if self.request.method in ["PATCH", "DELETE"]:
+            return [IsAdminUser()]
+        return [IsAuthenticated()]
+
+    def create(self, request, *args, **kwargs):
+        serializer = CreateOrderSerializer(
+            data=request.data,
+            context={"user_id": self.request.user.id},
+        )
+        serializer.is_valid(raise_exception=True)
+        order = serializer.save()
+        serializer = OrderSerializer(order)
+        return Response(serializer.data)
+
+    def get_serializer_class(self):
+        if self.request.method == "PATCH":
+            return UpdateOrderSerializer
+        elif self.request.method == "POST":
+            return CreateOrderSerializer
+        return OrderSerializer
+
+    def get_queryset(self):
+        user = self.request.user
+        if user.is_staff:
+            return Order.All.objects.all()
+        (customer_id, created) = Customer.objects.only("id").get_or_create(
+            user_id=user.id
+        )
+        Order.objects.filter(customer_id=customer_id)

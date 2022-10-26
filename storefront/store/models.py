@@ -1,4 +1,3 @@
-from tkinter import CASCADE
 from uuid import uuid4
 
 from django.core.validators import MinValueValidator
@@ -6,6 +5,7 @@ from django.conf import settings
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 from django.contrib import admin
+
 
 # Many to Many RelationShip
 class Promotion(models.Model):
@@ -60,7 +60,10 @@ class Customer(models.Model):
         choices=MemberChoices.choices,
         default=MemberChoices.MEMBERSHIP_EMPLOYEE,
     )
-    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+    )
 
     def __str__(self) -> str:
         return f"{self.user.first_name} - {self.user.last_name}"
@@ -102,7 +105,11 @@ class Order(models.Model):
 
 
 class OrderItem(models.Model):
-    order = models.ForeignKey(Order, on_delete=models.PROTECT)
+    order = models.ForeignKey(
+        Order,
+        on_delete=models.PROTECT,
+        related_name="items",
+    )
     product = models.ForeignKey(
         Product, on_delete=models.PROTECT, related_name="order_items"
     )
@@ -123,9 +130,15 @@ class Cart(models.Model):
 
 
 class CartItem(models.Model):
-    cart = models.ForeignKey(Cart, on_delete=models.CASCADE, related_name="items")
+    cart = models.ForeignKey(
+        Cart,
+        on_delete=models.CASCADE,
+        related_name="items",
+    )
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
-    quantity = models.PositiveSmallIntegerField(validators=[MinValueValidator(1)])
+    quantity = models.PositiveSmallIntegerField(
+        validators=[MinValueValidator(1)],
+    )
 
     class Meta:
         unique_together = [["cart", "product"]]
