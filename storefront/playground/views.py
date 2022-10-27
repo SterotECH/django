@@ -2,6 +2,7 @@ from django.shortcuts import render
 from django.http import HttpResponse
 from django.db.models import Q, F
 from django.core.mail import EmailMessage, BadHeaderError
+from templated_mail.mail import BaseEmailMessage
 from store.models import Product
 
 # Create your views here.
@@ -12,9 +13,12 @@ from store.models import Product
 
 def say_hello(request):
     try:
-        message = EmailMessage('subject','message','from@sterobuy.com',['john@moshbuy.com'])
-        message.attach_file('playground/static/images/dell-7Bmk9mAXP2I-unsplash.jpg')
-        message.send()
+        message = BaseEmailMessage(
+            template_name='email/hello.html',
+            context={'name':'Stero'},
+
+            )
+        message.send(['john@sterobuy.com'])
     except BadHeaderError:
         pass
     return render(
