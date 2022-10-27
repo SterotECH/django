@@ -200,8 +200,8 @@ CELERY_BROKER_URL = 'redis://localhost:6379/1'
 CELERY_BEAT_SCHEDULE = {
     'notify_customers': {
         'task': 'playground.tasks.notify_customers',
-        # 'schedule': crontab(day_of_week=1, hour=7, minute=30)
-        'schedule': 5,
+        'schedule': crontab(day_of_week=1, hour=7, minute=30),
+        # 'schedule': 5,
         'args': ['Hello world'],
     }
 }
