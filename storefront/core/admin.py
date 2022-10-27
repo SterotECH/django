@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.contenttypes.admin import GenericTabularInline
 from core.models import User
-from store.admin import ProductAdmin
+from store.admin import ProductAdmin, ProductImageInline
 from store.models import Product
 from tags.models import TaggedItem
 
@@ -13,23 +13,23 @@ class UserAdmin(BaseUserAdmin):
         (
             None,
             {
-                "classes": ("wide",),
-                "fields": (
-                    "username",
-                    "password1",
-                    "password2",
-                    "email",
-                    "first_name",
-                    "last_name",
+                'classes': ('wide',),
+                'fields': (
+                    'username',
+                    'password1',
+                    'password2',
+                    'email',
+                    'first_name',
+                    'last_name',
                 ),
             },
         ),
     )
-    # autocomplete_fields = ["user__first_name"]
+    # autocomplete_fields = ['user__first_name']
 
 
 class TagInline(GenericTabularInline):
-    autocomplete_fields = ["tag"]
+    autocomplete_fields = ['tag']
     model = TaggedItem
     extra: 0
     min_num = 1
@@ -37,7 +37,7 @@ class TagInline(GenericTabularInline):
 
 
 class CustomProductAdmin(ProductAdmin):
-    inlines = [TagInline]
+    inlines = [TagInline, ProductImageInline]
 
 
 admin.site.unregister(Product)

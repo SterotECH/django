@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from django.http import HttpResponse
 from django.db.models import Q, F
-
+from django.core.mail import EmailMessage, BadHeaderError
 from store.models import Product
 
 # Create your views here.
@@ -11,20 +11,14 @@ from store.models import Product
 
 
 def say_hello(request):
-    query_set = Product.objects.all()
-    # Product Inventory < 10 AND price < 20
-    query_set = Product.objects.filter(
-        Q(inventory__lt=10) | Q(unit_price__lt=20),
-    )
-
-    # Products: inventory = price
-    # query_set = Product.objects.filter(inventory=F("unit_price"))
-
-    # Sorting Data
-    # query_set = Product.objects.order_by("unit_price", "-title").reverse()
-    query_set = Product.objects.earliest("unit_price")
+    try:
+        message = EmailMessage('subject','message','from@sterobuy.com',['john@moshbuy.com'])
+        message.attach_file('playground/static/images/dell-7Bmk9mAXP2I-unsplash.jpg')
+        message.send()
+    except BadHeaderError:
+        pass
     return render(
         request,
         "hello.html",
-        {"name": "Mosh", "products": list(query_set)},
+        {"name": "Mosh", },
     )

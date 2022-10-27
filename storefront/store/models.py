@@ -6,6 +6,8 @@ from django.db import models
 from django.utils.translation import gettext_lazy as _
 from django.contrib import admin
 
+from store.validator import validate_file_size
+
 
 # Many to Many RelationShip
 class Promotion(models.Model):
@@ -45,6 +47,19 @@ class Product(models.Model):
 
     class Meta:
         ordering = ["title"]
+
+
+class ProductImage(models.Model):
+    """Image for the product"""
+
+    product = models.ForeignKey(
+        Product,
+        related_name="images",
+        on_delete=models.CASCADE,
+    )
+    image = models.ImageField(
+        upload_to="store/media",
+        validators=[validate_file_size])
 
 
 class Customer(models.Model):
@@ -93,7 +108,9 @@ class Order(models.Model):
     ]
     place_at = models.DateTimeField(auto_now_add=True)
     payment_status = models.CharField(
-        max_length=1, choices=PAYMENT_STATUS_CHOICES, default=PAYMENT_PENDING
+        max_length=1,
+        choices=PAYMENT_STATUS_CHOICES,
+        default=PAYMENT_PENDING,
     )
     customer = models.ForeignKey(Customer, on_delete=models.PROTECT)
 
@@ -146,7 +163,9 @@ class CartItem(models.Model):
 
 class Review(models.Model):
     product = models.ForeignKey(
-        Product, on_delete=models.CASCADE, related_name="reviews"
+        Product,
+        on_delete=models.CASCADE,
+        related_name="reviews",
     )
     name = models.CharField(max_length=255)
     description = models.TextField()

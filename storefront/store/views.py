@@ -26,6 +26,7 @@ from .models import (
     Order,
     OrderItem,
     Product,
+    ProductImage,
     Review,
 )
 from .serializer import (
@@ -37,6 +38,7 @@ from .serializer import (
     CustomerSerializer,
     OrderItemSerializer,
     OrderSerializer,
+    ProductImageSerializer,
     ProductSerializer,
     ReviewSerializer,
     UpdateCartItemSerializer,
@@ -45,7 +47,7 @@ from .serializer import (
 
 
 class ProductViewSet(ModelViewSet):
-    queryset = Product.objects.all()
+    queryset = Product.objects.prefetch_related('images').all()
     serializer_class = ProductSerializer
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_class = ProductFilter
@@ -195,3 +197,17 @@ class OrderViewSet(ModelViewSet):
             user_id=user.id,  # type: ignore
         )
         Order.objects.filter(customer_id=customer_id)
+
+
+class ProductImageViewSet(ModelViewSet):
+    """Manage the product image endpoint"""
+
+    serializer_class = ProductImageSerializer
+
+    def get_queryset(self):
+        return ProductImage.objects.filter(
+            product_id=self.kwargs["product_pk"],
+        )
+
+    def get_serializer_context(self):
+        return {"product_id": self.kwargs["product_pk"]}
