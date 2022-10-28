@@ -4,7 +4,7 @@ import os
 
 DEBUG = True
 
-SECRET_KEY = os.environ.get('SECRET_KEY')
+SECRET_KEY = os.environ('SECRET_KEY')
 
 ALLOWED_HOSTS = [
     'sterobuy-prod.herokuapp.com',
@@ -15,7 +15,7 @@ DATABASES = {
     'default': dj_database_url.config()
 }
 
-REDIS_URL = os.environ.get('REDIS_URL')
+REDIS_URL = os.environ('REDIS_URL')
 
 CELERY_BROKER_URL = REDIS_URL
 
