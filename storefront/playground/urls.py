@@ -1,4 +1,4 @@
 from django.urls import path
 from . import views
 
-urlpatterns = [path("", views.say_hello)]
+urlpatterns = [path("", views.HelloView.as_view(), name="Hello"), ]
