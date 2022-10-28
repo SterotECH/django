@@ -1,28 +1,16 @@
 from .common import *
-
+import dj_database_url
 import os
 
 DEBUG = True
 
 SECRET_KEY = os.environ('SECRET_KEY')
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    'sterobuy-prod.herokuapp.com',
+    'django-production.up.railway.app']
 
 
 DATABASES = {
-    # 'default': {
-    #     'ENGINE': 'django.db.backends.mysql',
-    #     'NAME': 'storefront',
-    #     'HOST': 'localhost',
-    #     'USER': 'stero',
-    #     'PASSWORD': 'code .',
-    # },
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'storefront',
-        'USER': 'stero',
-        'PASSWORD': 'code .',
-        'HOST': 'localhost',
-        'PORT': '5432',
-    },
+    'default': dj_database_url.config()
 }
