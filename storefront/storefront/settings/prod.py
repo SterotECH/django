@@ -2,27 +2,22 @@ from .common import *
 import dj_database_url
 import os
 
-DEBUG = True
+DEBUG = False
 
-SECRET_KEY = os.environ.get('SECRET_KEY')
+SECRET_KEY = os.environ['SECRET_KEY']
 
 ALLOWED_HOSTS = [
     'sterobuy-prod.herokuapp.com',
-    'django-production.up.railway.app']
+    'django-production.up.railway.app',
+    '0.0.0.0',
+]
 
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.environ.get('PGDATABASE'),
-        'USER': os.environ.get('PGUSER'),
-        'PASSWORD': os.environ.get('PGPASSWORD'),
-        'HOST': os.environ.get('PGHOST'),
-        'PORT': os.environ.get('PGUSER'),
-    },
+    'default': dj_database_url.config()
 }
 
-REDIS_URL = os.environ.get('REDIS_URL')
+REDIS_URL = os.environ['REDIS_URL']
 
 CELERY_BROKER_URL = REDIS_URL
 
