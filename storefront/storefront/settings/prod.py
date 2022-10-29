@@ -4,7 +4,7 @@ import os
 
 DEBUG = True
 
-SECRET_KEY = os.environ('SECRET_KEY')
+SECRET_KEY = os.environ.get('SECRET_KEY')
 
 ALLOWED_HOSTS = [
     'sterobuy-prod.herokuapp.com',
@@ -12,10 +12,17 @@ ALLOWED_HOSTS = [
 
 
 DATABASES = {
-    'default': dj_database_url.config()
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': os.environ.get('PGDATABASE'),
+        'USER': os.environ.get('PGUSER'),
+        'PASSWORD': os.environ.get('PGPASSWORD'),
+        'HOST': os.environ.get('PGHOST'),
+        'PORT': os.environ.get('PGUSER'),
+    },
 }
 
-REDIS_URL = os.environ('REDIS_URL')
+REDIS_URL = os.environ.get('REDIS_URL')
 
 CELERY_BROKER_URL = REDIS_URL
 
